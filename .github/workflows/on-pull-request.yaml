@@ -1,0 +1,17 @@
+---
+name: Create DEV Release
+# https://dev.to/koddr/github-action-for-release-your-go-projects-as-fast-and-easily-as-possible-20a2
+# https://github.com/orgs/community/discussions/25244
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yaml
+
+  build-and-push:
+    uses: ./.github/workflows/docker-image.yaml
+    with:
+      push: false
