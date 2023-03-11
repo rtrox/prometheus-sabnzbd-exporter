@@ -3,8 +3,6 @@ package client
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/rs/zerolog/log"
 )
 
 var BASE_URI_PATH = "/sabnzbd/api"
@@ -25,7 +23,6 @@ func NewSabnzbdClient(baseURL, apiKey string) (*SabnzbdClient, error) {
 		}
 	}
 	baseURI = baseURI.JoinPath(BASE_URI_PATH)
-	log.Info().Interface("baseURI", baseURI).Str("baseURIString", baseURI.String()).Msg("baseURI")
 	return &SabnzbdClient{
 		baseURI: baseURI,
 		client: &http.Client{

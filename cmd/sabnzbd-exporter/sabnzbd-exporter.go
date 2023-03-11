@@ -76,6 +76,11 @@ func main() {
 			Msg("SABNZBD_API_KEY must be set to the api key of your sabnzbd instance.")
 	}
 
+	listen_port := os.Getenv("SABNZBD_EXPORTER_PORT")
+	if listen_port == "" {
+		listen_port = "8080"
+	}
+
 	var srv http.Server
 
 	idleConnsClosed := make(chan struct{})
@@ -99,6 +104,7 @@ func main() {
 	log.Info().
 		Str("app_name", app_name).
 		Str("version", version).
+		Str("listen_port", listen_port).
 		Msg("Exporter Started.")
 
 	ex, err := exporter.NewSabnzbdExporter(base_url, api_key)
@@ -131,7 +137,7 @@ func main() {
 	router := http.NewServeMux()
 	router.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	router.Handle("/healthz", newHealthCheckHandler())
-	srv.Addr = ":8080"
+	srv.Addr = fmt.Sprintf(":%s", listen_port)
 	srv.Handler = router
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Failed to start HTTP Server")
