@@ -1,0 +1,30 @@
+---
+builds:
+  - main: ./cmd/sabnzbd-exporter/sabnzbd-exporter.go
+
+    binary: sabnzbd-exporter
+
+    ldflags:
+      - -s -w -X main.build={{.Version}}
+
+    env:
+      - CGO_ENABLED=0
+
+    goos:
+      - linux
+      - windows
+      - darwin
+
+    goarch:
+      - amd64
+      - arm
+      - arm64
+
+    goarm:
+      - 6
+      - 7
+
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+changelog:
+  use: github-native

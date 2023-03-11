@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: &name prometheus-sabnzbd-exporter
+    app.kubernetes.io/instance: &instance prometheus-sabnzbd-exporter
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/part-of: *instance
+    k8s-app: *name
+  name: *name
+  namespace: sabnzbd-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *instance
+      app.kubernetes.io/component: metrics
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *instance
+        app.kubernetes.io/component: metrics
+        # ServiceMonitor adds this device-name field as a metric label
+        sabnzbd-exporter/device-name: *device
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: sabnzbd-exporter
+          image: 'rtrox/prometheus-sabnzbd-exporter:v0.0.2'
+          imagePullPolicy: IfNotPresent
+          env:
+            # sabnzbd_HOSTNAME is the hostname we should reach out to
+            # for this device [change this]
+            - name: SABNZBD_BASE_URL
+              value: "localhost:8080"
+            - name: SABNZBD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZBD_API_KEY
+                  name: sabnzbd-secret
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 64Ki
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
