@@ -1,6 +1,6 @@
 ARG VERSION="devel"
 
-FROM golang:1.19-alpine AS build_base
+FROM golang:1.20-alpine AS build_base
 WORKDIR /tmp/sabnzbd-exporter
 
 COPY . .
