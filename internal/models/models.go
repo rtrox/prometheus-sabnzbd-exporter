@@ -8,69 +8,6 @@ import (
 	"time"
 )
 
-// parseSize is a monad which parses a size string in the format of "123.45 KB" or "123.45"
-func parseSize(sz string, prevErr error) (float64, error) {
-	if prevErr != nil {
-		return 0, prevErr
-	}
-	fields := strings.Fields(strings.TrimSpace(sz))
-	if len(fields) == 0 {
-		return 0, nil
-	}
-	if len(fields) > 2 {
-		return 0, fmt.Errorf("Invalid size: %s", sz)
-	}
-
-	ret, err := strconv.ParseFloat(fields[0], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	if len(fields) == 1 {
-		return ret, nil
-	}
-
-	switch fields[1] {
-	case "B":
-		return ret, nil
-	case "KB", "K":
-		return ret * 1024, nil
-	case "MB", "M":
-		return ret * 1024 * 1024, nil
-	case "GB", "G":
-		return ret * 1024 * 1024 * 1024, nil
-	case "TB", "T":
-		return ret * 1024 * 1024 * 1024 * 1024, nil
-	case "PB", "P":
-		return ret * 1024 * 1024 * 1024 * 1024 * 1024, nil
-	default:
-		return 0, fmt.Errorf("Invalid size suffix: %s", sz)
-	}
-}
-
-// parseDuration is a monad which parses a duration string in the format of "HH:MM:SS" or "MM:SS"
-func parseDuration(s string, prevErr error) (time.Duration, error) {
-	if prevErr != nil {
-		return 0, prevErr
-	}
-	if s == "" {
-		return 0, nil
-	}
-	fields := strings.Split(strings.TrimSpace(s), ":")
-	switch len(fields) {
-	case 1:
-		return time.ParseDuration(fmt.Sprintf("%ss", fields[0]))
-	case 2:
-		return time.ParseDuration(fmt.Sprintf("%sm%ss", fields[0], fields[1]))
-	case 3:
-		return time.ParseDuration(fmt.Sprintf("%sh%sm%ss", fields[0], fields[1], fields[2]))
-	case 4:
-		return time.ParseDuration(fmt.Sprintf("%sd%sh%sm%ss", fields[0], fields[1], fields[2], fields[3]))
-	default:
-		return 0, fmt.Errorf("Invalid duration: %s", s)
-	}
-}
-
 type Status int
 
 const (
@@ -119,16 +56,6 @@ type ServerStat struct {
 type ServerStats struct {
 	Total   int // Total Data Downloaded in bytes
 	Servers map[string]ServerStat
-}
-
-func latestStat(m map[string]int) (string, int) {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	key := keys[len(keys)-1]
-	return key, m[key]
 }
 
 func NewServerStatsFromResponse(response ServerStatsResponse) *ServerStats {
@@ -225,4 +152,78 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 		Status:                     StatusFromString(queue.Status),
 		TimeEstimate:               timeLeft,
 	}, nil
+}
+
+// latestStat gets the most recent date's value from a map of dates to values
+func latestStat(m map[string]int) (string, int) {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	key := keys[len(keys)-1]
+	return key, m[key]
+}
+
+// parseSize is a monad which parses a size string in the format of "123.45 KB" or "123.45"
+func parseSize(sz string, prevErr error) (float64, error) {
+	if prevErr != nil {
+		return 0, prevErr
+	}
+	fields := strings.Fields(strings.TrimSpace(sz))
+	if len(fields) == 0 {
+		return 0, nil
+	}
+	if len(fields) > 2 {
+		return 0, fmt.Errorf("Invalid size: %s", sz)
+	}
+
+	ret, err := strconv.ParseFloat(fields[0], 64)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(fields) == 1 {
+		return ret, nil
+	}
+
+	switch fields[1] {
+	case "B":
+		return ret, nil
+	case "KB", "K":
+		return ret * 1024, nil
+	case "MB", "M":
+		return ret * 1024 * 1024, nil
+	case "GB", "G":
+		return ret * 1024 * 1024 * 1024, nil
+	case "TB", "T":
+		return ret * 1024 * 1024 * 1024 * 1024, nil
+	case "PB", "P":
+		return ret * 1024 * 1024 * 1024 * 1024 * 1024, nil
+	default:
+		return 0, fmt.Errorf("Invalid size suffix: %s", sz)
+	}
+}
+
+// parseDuration is a monad which parses a duration string in the format of "HH:MM:SS" or "MM:SS"
+func parseDuration(s string, prevErr error) (time.Duration, error) {
+	if prevErr != nil {
+		return 0, prevErr
+	}
+	if s == "" {
+		return 0, nil
+	}
+	fields := strings.Split(strings.TrimSpace(s), ":")
+	switch len(fields) {
+	case 1:
+		return time.ParseDuration(fmt.Sprintf("%ss", fields[0]))
+	case 2:
+		return time.ParseDuration(fmt.Sprintf("%sm%ss", fields[0], fields[1]))
+	case 3:
+		return time.ParseDuration(fmt.Sprintf("%sh%sm%ss", fields[0], fields[1], fields[2]))
+	case 4:
+		return time.ParseDuration(fmt.Sprintf("%sd%sh%sm%ss", fields[0], fields[1], fields[2], fields[3]))
+	default:
+		return 0, fmt.Errorf("Invalid duration: %s", s)
+	}
 }
