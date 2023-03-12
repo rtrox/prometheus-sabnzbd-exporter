@@ -23,8 +23,8 @@ type Config struct {
 	ApiKey           string `koanf:"api_key"`
 	ListenPort       string `koanf:"listen_port"`
 	LogLevel         string `koanf:"log_level"`
-	GoCollector      bool   `koanf:"go-collector"`
-	ProcessCollector bool   `koanf:"process-collector"`
+	GoCollector      bool   `koanf:"go_collector"`
+	ProcessCollector bool   `koanf:"process_collector"`
 }
 
 func LoadConfig(appName string, args []string) (*Config, error) {
@@ -41,7 +41,7 @@ func LoadConfig(appName string, args []string) (*Config, error) {
 	f.String("listen_port", "8080", "port to listen on")
 	f.String("base_url", "", "base url of sabnzbd")
 	f.String("api_key", "", "api key of sabnzbd")
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	k.Load(confmap.Provider(map[string]interface{}{
 		"log_level":         "info",
@@ -75,7 +75,7 @@ func LoadConfig(appName string, args []string) (*Config, error) {
 
 func (c *Config) Validate() error {
 	return validation.ValidateStruct(c,
-		validation.Field(&c.BaseURL, validation.Required),
+		validation.Field(&c.BaseURL, validation.Required, is.URL),
 		validation.Field(&c.ApiKey, validation.Required),
 		validation.Field(&c.ListenPort, validation.Required, is.Port),
 		validation.Field(&c.LogLevel, validation.Required, validation.In("debug", "info", "warn", "error")),
