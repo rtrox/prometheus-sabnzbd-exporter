@@ -85,13 +85,14 @@ func main() {
 		Str("app_name", appName).
 		Str("version", version).
 		Str("listen_port", cfg.ListenPort).
+		Str("base_url", cfg.BaseURL).
 		Msg("Exporter Started.")
 
 	ex, err := exporter.NewSabnzbdExporter(cfg.BaseURL, cfg.ApiKey)
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Msg("Failed to connect to Awair device.")
+			Msg("Failed to build SabnzbD Collector.")
 	}
 
 	infoMetricOpts.ConstLabels = prometheus.Labels{
