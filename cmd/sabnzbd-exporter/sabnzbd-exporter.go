@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
+
 	"fmt"
 	"net/http"
 	"os"
@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"prometheus-sabnzbd-exporter/internal/config"
 	"prometheus-sabnzbd-exporter/internal/exporter"
 
-	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -22,8 +22,8 @@ import (
 
 var (
 	// go build -ldflags="-X \"main.version=${VERSION}\"" ./cmd/awair-exporter/awair-exporter.go
-	app_name = "sabnzbd-exporter"
-	version  = "x.x.x"
+	appName = "sabnzbd-exporter"
+	version = "x.x.x"
 )
 
 var (
@@ -46,40 +46,20 @@ func newHealthCheckHandler() http.Handler {
 }
 
 func main() {
-	debug := flag.Bool("debug", false, "sets log level to debug")
-	goCollector := flag.Bool("gocollector", false, "enables go stats exporter")
-	processCollector := flag.Bool("processcollector", false, "enables process stats exporter")
-	flag.Parse()
-
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if *debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
-	err := godotenv.Load(".env")
+	cfg, err := config.LoadConfig(appName, os.Args[1:])
 	if err != nil {
-		// Typical use will be via direct env in kubernetes,
-		// don't fail here.
-		log.Warn().Err(err).Msg("No .env file loaded")
+		log.Fatal().Err(err).Msg("Failed to load config")
 	}
-
-	// TODO: validation
-	base_url := os.Getenv("SABNZBD_BASE_URL")
-	if base_url == "" {
-		log.Fatal().
-			Msg("SABNZBD_BASE_URL must be set to the base url of your sabnzbd instance.")
+	err = cfg.Validate()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Invalid config")
 	}
-
-	api_key := os.Getenv("SABNZBD_API_KEY")
-	if api_key == "" {
-		log.Fatal().
-			Msg("SABNZBD_API_KEY must be set to the api key of your sabnzbd instance.")
+	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		// Sanity Check, should be unreachable due to validation.
+		log.Fatal().Err(err).Msg("Invalid log level")
 	}
-
-	listen_port := os.Getenv("SABNZBD_EXPORTER_PORT")
-	if listen_port == "" {
-		listen_port = "8080"
-	}
+	zerolog.SetGlobalLevel(logLevel)
 
 	var srv http.Server
 
@@ -102,12 +82,12 @@ func main() {
 	}()
 
 	log.Info().
-		Str("app_name", app_name).
+		Str("app_name", appName).
 		Str("version", version).
-		Str("listen_port", listen_port).
+		Str("listen_port", cfg.ListenPort).
 		Msg("Exporter Started.")
 
-	ex, err := exporter.NewSabnzbdExporter(base_url, api_key)
+	ex, err := exporter.NewSabnzbdExporter(cfg.BaseURL, cfg.ApiKey)
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -115,9 +95,9 @@ func main() {
 	}
 
 	infoMetricOpts.ConstLabels = prometheus.Labels{
-		"app_name": app_name,
+		"app_name": appName,
 		"version":  version,
-		"base_url": base_url,
+		"base_url": cfg.BaseURL,
 	}
 
 	reg := prometheus.NewPedanticRegistry()
@@ -128,16 +108,16 @@ func main() {
 		),
 		ex,
 	)
-	if *goCollector {
+	if cfg.GoCollector {
 		reg.MustRegister(collectors.NewGoCollector())
 	}
-	if *processCollector {
+	if cfg.ProcessCollector {
 		reg.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	}
 	router := http.NewServeMux()
 	router.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	router.Handle("/healthz", newHealthCheckHandler())
-	srv.Addr = fmt.Sprintf(":%s", listen_port)
+	srv.Addr = fmt.Sprintf(":%s", cfg.ListenPort)
 	srv.Handler = router
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Failed to start HTTP Server")
