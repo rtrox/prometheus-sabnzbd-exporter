@@ -11,7 +11,7 @@ require (
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.0.0
 	github.com/prometheus/client_golang v1.14.0
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/sync v0.1.0
 )
