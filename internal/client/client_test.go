@@ -6,8 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+}
 
 func TestNewClient(t *testing.T) {
 	require := require.New(t)

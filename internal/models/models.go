@@ -222,7 +222,16 @@ func parseDuration(s string, prevErr error) (time.Duration, error) {
 	case 3:
 		return time.ParseDuration(fmt.Sprintf("%sh%sm%ss", fields[0], fields[1], fields[2]))
 	case 4:
-		return time.ParseDuration(fmt.Sprintf("%sd%sh%sm%ss", fields[0], fields[1], fields[2], fields[3]))
+		days, err := strconv.ParseInt(fields[0], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		hours, err := strconv.ParseInt(fields[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		totalHours := (days * 24) + hours
+		return time.ParseDuration(fmt.Sprintf("%dh%sm%ss", totalHours, fields[2], fields[3]))
 	default:
 		return 0, fmt.Errorf("Invalid duration: %s", s)
 	}

@@ -7,57 +7,145 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpdateServerStatCache_SameDay(t *testing.T) {
+func TestUpdateServerStatsCache_SameDay(t *testing.T) {
 	require := require.New(t)
-	cache := ServerStatCache{
-		todayKey:                  "2020-01-01",
-		total:                     1,
-		articlesTriedHistorical:   2,
-		articlesTriedToday:        3,
-		articlesSuccessHistorical: 2,
-		articlesSuccessToday:      3,
-	}
-	cache.Update(models.ServerStat{
-		Total:           2,
-		ArticlesTried:   5,
-		ArticlesSuccess: 5,
-		DayParsed:       "2020-01-01",
+	cache := NewServersStatsCache()
+	cache.Update(models.ServerStats{
+		Total: 1,
+		Servers: map[string]models.ServerStat{
+			"server1": {
+				Total:           1,
+				ArticlesTried:   2,
+				ArticlesSuccess: 2,
+				DayParsed:       "2020-01-01",
+			},
+			"server2": {
+				Total:           2,
+				ArticlesTried:   4,
+				ArticlesSuccess: 4,
+				DayParsed:       "2020-01-01",
+			},
+		},
+	})
+	require.Equal(1, cache.GetTotal())
+	m := cache.GetServerMap()
+	require.Equal(2, len(m))
+
+	server1 := m["server1"]
+	require.Equal(1, server1.GetTotal())
+	require.Equal(2, server1.GetArticlesTried())
+	require.Equal(2, server1.GetArticlesSuccess())
+
+	server2 := m["server2"]
+	require.Equal(2, server2.GetTotal())
+	require.Equal(4, server2.GetArticlesTried())
+	require.Equal(4, server2.GetArticlesSuccess())
+	cache.Update(models.ServerStats{
+		Total: 2,
+		Servers: map[string]models.ServerStat{
+			"server1": {
+				Total:           2,
+				ArticlesTried:   6,
+				ArticlesSuccess: 6,
+				DayParsed:       "2020-01-01",
+			},
+			"server2": {
+				Total:           3,
+				ArticlesTried:   8,
+				ArticlesSuccess: 8,
+				DayParsed:       "2020-01-01",
+			},
+		},
 	})
 	require.Equal(2, cache.GetTotal())
-	require.Equal(7, cache.GetArticlesTried())
-	require.Equal(7, cache.GetArticlesSuccess())
+	m = cache.GetServerMap()
+	require.Equal(2, len(m))
+
+	server1 = m["server1"]
+	require.Equal(2, server1.GetTotal())
+	require.Equal(6, server1.GetArticlesTried())
+	require.Equal(6, server1.GetArticlesSuccess())
+
+	server2 = m["server2"]
+	require.Equal(3, server2.GetTotal())
+	require.Equal(8, server2.GetArticlesTried())
+	require.Equal(8, server2.GetArticlesSuccess())
 }
 
-func TestUpdateServerStatCache_NewDay(t *testing.T) {
+func TestUpdateServerStatsCache_DifferentDay(t *testing.T) {
 	require := require.New(t)
-	cache := ServerStatCache{
-		todayKey:                  "2020-01-01",
-		total:                     1,
-		articlesTriedHistorical:   2,
-		articlesTriedToday:        3,
-		articlesSuccessHistorical: 2,
-		articlesSuccessToday:      3,
-	}
-	cache.Update(models.ServerStat{
-		Total:           2, // should always replace existing total
-		ArticlesTried:   5, // should be added to all existing values (historical gets "today" added, then "today" gets replaced)
-		ArticlesSuccess: 5, // ditto ^
-		DayParsed:       "2020-01-02",
+	cache := NewServersStatsCache()
+	cache.Update(models.ServerStats{
+		Total: 1,
+		Servers: map[string]models.ServerStat{
+			"server1": {
+				Total:           1,
+				ArticlesTried:   2,
+				ArticlesSuccess: 2,
+				DayParsed:       "2020-01-01",
+			},
+			"server2": {
+				Total:           2,
+				ArticlesTried:   4,
+				ArticlesSuccess: 4,
+				DayParsed:       "2020-01-01",
+			},
+		},
+	})
+	require.Equal(1, cache.GetTotal())
+	m := cache.GetServerMap()
+	require.Equal(2, len(m))
+
+	server1 := m["server1"]
+	require.Equal(1, server1.GetTotal())
+	require.Equal(2, server1.GetArticlesTried())
+	require.Equal(2, server1.GetArticlesSuccess())
+
+	server2 := m["server2"]
+	require.Equal(2, server2.GetTotal())
+	require.Equal(4, server2.GetArticlesTried())
+	require.Equal(4, server2.GetArticlesSuccess())
+	cache.Update(models.ServerStats{
+		Total: 2,
+		Servers: map[string]models.ServerStat{
+			"server1": {
+				Total:           2,
+				ArticlesTried:   6,
+				ArticlesSuccess: 6,
+				DayParsed:       "2020-01-02",
+			},
+			"server2": {
+				Total:           3,
+				ArticlesTried:   8,
+				ArticlesSuccess: 8,
+				DayParsed:       "2020-01-02",
+			},
+		},
 	})
 	require.Equal(2, cache.GetTotal())
-	require.Equal(10, cache.GetArticlesTried())
-	require.Equal(10, cache.GetArticlesSuccess())
+	m = cache.GetServerMap()
+	require.Equal(2, len(m))
+
+	server1 = m["server1"]
+	require.Equal(2, server1.GetTotal())
+	require.Equal(8, server1.GetArticlesTried())
+	require.Equal(8, server1.GetArticlesSuccess())
+
+	server2 = m["server2"]
+	require.Equal(3, server2.GetTotal())
+	require.Equal(12, server2.GetArticlesTried())
+	require.Equal(12, server2.GetArticlesSuccess())
 }
 
 func TestNewServerStatsCache_SetsServers(t *testing.T) {
 	require := require.New(t)
-	cache := NewServerStatsCache()
+	cache := NewServersStatsCache()
 	require.NotNil(cache.Servers)
 }
 
 func TestUpdateServerStatsCache(t *testing.T) {
 	require := require.New(t)
-	cache := NewServerStatsCache()
+	cache := NewServersStatsCache()
 	cache.Update(models.ServerStats{
 		Total: 1,
 		Servers: map[string]models.ServerStat{
@@ -109,7 +197,7 @@ func TestUpdateServerStatsCache(t *testing.T) {
 func TestGetServerMap_ReturnsCopy(t *testing.T) {
 	// It's important to return a true copy to maintain thread safety
 	require := require.New(t)
-	cache := NewServerStatsCache()
+	cache := NewServersStatsCache()
 	cache.Update(models.ServerStats{
 		Total: 1,
 		Servers: map[string]models.ServerStat{
@@ -122,7 +210,9 @@ func TestGetServerMap_ReturnsCopy(t *testing.T) {
 		},
 	})
 	serverMap := cache.GetServerMap()
-	require.Equal(cache.Servers, serverMap)
+	for k, v := range serverMap {
+		require.Equal(cache.Servers[k], v)
+	}
 	require.NotSame(&cache.Servers, &serverMap)
 	cache.Update(models.ServerStats{
 		Total: 2,

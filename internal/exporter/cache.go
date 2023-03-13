@@ -5,7 +5,14 @@ import (
 	"sync"
 )
 
-type ServerStatCache struct {
+type ServerStats interface {
+	Update(stat models.ServerStat) ServerStats
+	GetTotal() int
+	GetArticlesTried() int
+	GetArticlesSuccess() int
+}
+
+type serverStatCache struct {
 	total                     int
 	articlesTriedHistorical   int
 	articlesTriedToday        int
@@ -14,7 +21,7 @@ type ServerStatCache struct {
 	todayKey                  string
 }
 
-func (s *ServerStatCache) Update(stat models.ServerStat) {
+func (s serverStatCache) Update(stat models.ServerStat) ServerStats {
 	s.total = stat.Total
 	if stat.DayParsed != s.todayKey {
 		s.articlesTriedHistorical += s.articlesTriedToday
@@ -25,56 +32,57 @@ func (s *ServerStatCache) Update(stat models.ServerStat) {
 	}
 	s.articlesTriedToday = stat.ArticlesTried
 	s.articlesSuccessToday = stat.ArticlesSuccess
+	return s
 }
 
-func (s *ServerStatCache) GetTotal() int {
+func (s serverStatCache) GetTotal() int {
 	return s.total
 }
 
-func (s *ServerStatCache) GetArticlesTried() int {
+func (s serverStatCache) GetArticlesTried() int {
 	return s.articlesTriedHistorical + s.articlesTriedToday
 }
 
-func (s *ServerStatCache) GetArticlesSuccess() int {
+func (s serverStatCache) GetArticlesSuccess() int {
 	return s.articlesSuccessHistorical + s.articlesSuccessToday
 }
 
-type ServerStatsCache struct {
+type ServersStatsCache struct {
 	lock    sync.RWMutex
 	Total   int
-	Servers map[string]ServerStatCache
+	Servers map[string]serverStatCache
 }
 
-func NewServerStatsCache() *ServerStatsCache {
-	return &ServerStatsCache{
-		Servers: make(map[string]ServerStatCache),
+func NewServersStatsCache() *ServersStatsCache {
+	return &ServersStatsCache{
+		Servers: make(map[string]serverStatCache),
 	}
 }
 
-func (c *ServerStatsCache) Update(stats models.ServerStats) {
+func (c *ServersStatsCache) Update(stats models.ServerStats) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.Total = stats.Total
 	for name, srv := range stats.Servers {
-		var toCache ServerStatCache
+		var toCache serverStatCache
 		if cached, ok := c.Servers[name]; ok {
 			toCache = cached
 		}
-		toCache.Update(srv)
+		toCache = toCache.Update(srv).(serverStatCache)
 		c.Servers[name] = toCache
 	}
 }
 
-func (c *ServerStatsCache) GetTotal() int {
+func (c *ServersStatsCache) GetTotal() int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return c.Total
 }
 
-func (c *ServerStatsCache) GetServerMap() map[string]ServerStatCache {
+func (c *ServersStatsCache) GetServerMap() map[string]ServerStats {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	ret := make(map[string]ServerStatCache)
+	ret := make(map[string]ServerStats)
 	for k, v := range c.Servers {
 		ret[k] = v
 	}

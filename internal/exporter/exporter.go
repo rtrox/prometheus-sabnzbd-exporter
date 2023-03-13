@@ -145,7 +145,7 @@ func boolToFloat(b bool) float64 {
 
 type SabnzbdExporter struct {
 	baseURL string
-	cache   *ServerStatsCache
+	cache   *ServersStatsCache
 	client  *client.SabnzbdClient
 }
 
@@ -156,7 +156,7 @@ func NewSabnzbdExporter(baseURL string, apiKey string) (*SabnzbdExporter, error)
 	}
 	return &SabnzbdExporter{
 		baseURL: baseURL,
-		cache:   NewServerStatsCache(),
+		cache:   NewServersStatsCache(),
 		client:  client,
 	}, nil
 }
