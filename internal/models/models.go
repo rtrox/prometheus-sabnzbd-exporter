@@ -95,11 +95,11 @@ type QueueStats struct {
 	HaveWarnings               float64       // Number of Warnings present
 	Quota                      float64       // Total Quota configured Bytes
 	HaveQuota                  bool          // Is a Periodic Quota set for Sabnzbd?
-	LeftQuota                  float64       // Quota Remaining Bytes
+	RemainingQuota             float64       // Quota Remaining Bytes
 	CacheArt                   float64       // Number of Articles in Cache
 	CacheSize                  float64       // Size of Cache in bytes
 	Speed                      float64       // Float String representing bps
-	SizeLeft                   float64       // Bytes left to download in queue
+	RemainingSize              float64       // Bytes left to download in queue
 	Size                       float64       // total bytes represented by queue
 	ItemsInQueue               float64       // Total number of items in queue
 	Status                     Status        // Status of sabnzbd (1 = Idle, 2 = Paused, 3 = Downloading)
@@ -142,11 +142,11 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 		HaveWarnings:               haveWarnings,
 		Quota:                      quota,
 		HaveQuota:                  queue.HaveQuota,
-		LeftQuota:                  leftQuota,
+		RemainingQuota:             leftQuota,
 		CacheArt:                   cacheArt,
 		CacheSize:                  cacheSize,
 		Speed:                      speed,
-		SizeLeft:                   sizeLeft,
+		RemainingSize:              sizeLeft,
 		Size:                       size,
 		ItemsInQueue:               float64(queue.NoofSlotsTotal),
 		Status:                     StatusFromString(queue.Status),

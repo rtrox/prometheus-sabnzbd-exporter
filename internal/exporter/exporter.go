@@ -277,7 +277,7 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 		diskTotal, prometheus.GaugeValue, queueStats.CompletedDirDiskspaceTotal, e.baseURL, "complete",
 	)
 	ch <- prometheus.MustNewConstMetric(
-		remainingQuota, prometheus.GaugeValue, queueStats.LeftQuota, e.baseURL,
+		remainingQuota, prometheus.GaugeValue, queueStats.RemainingQuota, e.baseURL,
 	)
 	ch <- prometheus.MustNewConstMetric(
 		quota, prometheus.GaugeValue, queueStats.Quota, e.baseURL,
@@ -292,7 +292,7 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 		speed, prometheus.GaugeValue, queueStats.Speed, e.baseURL,
 	)
 	ch <- prometheus.MustNewConstMetric(
-		bytesRemaining, prometheus.GaugeValue, queueStats.SizeLeft, e.baseURL,
+		bytesRemaining, prometheus.GaugeValue, queueStats.RemainingSize, e.baseURL,
 	)
 	ch <- prometheus.MustNewConstMetric(
 		bytesTotal, prometheus.GaugeValue, queueStats.Size, e.baseURL,
