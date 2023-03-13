@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"prometheus-sabnzbd-exporter/internal/client"
 	"prometheus-sabnzbd-exporter/internal/models"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
@@ -134,6 +135,24 @@ var (
 		[]string{"target"},
 		nil,
 	)
+	scrapeDuration = prometheus.NewDesc(
+		prometheus.BuildFQName(METRIC_PREFIX, "", "scrape_duration_seconds"),
+		"Duration of the SabnzbD scrape",
+		[]string{"target"},
+		nil,
+	)
+	queueQueryDuration = prometheus.NewDesc(
+		prometheus.BuildFQName(METRIC_PREFIX, "", "queue_query_duration_seconds"),
+		"Duration querying the queue endpoint of SabnzbD",
+		[]string{"target"},
+		nil,
+	)
+	serverStatsQueryDuration = prometheus.NewDesc(
+		prometheus.BuildFQName(METRIC_PREFIX, "", "server_stats_query_duration_seconds"),
+		"Duration querying the server_stats endpoint of SabnzbD",
+		[]string{"target"},
+		nil,
+	)
 )
 
 func boolToFloat(b bool) float64 {
@@ -172,7 +191,6 @@ func (s *SabnzbdExporter) getQueueStats() (*models.QueueStats, error) {
 		return nil, fmt.Errorf("Failed to decode queue stats JSON: %w", err)
 	}
 	queueStats, err := models.NewQueueStatsFromResponse(queueResponse)
-	log.Debug().Interface("queueStats", queueStats).Interface("queueResponse", queueResponse).Msg("Parsed queue stats")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse queue Stats: %w", err)
 	}
@@ -214,13 +232,26 @@ func (e *SabnzbdExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- serverDownloadedBytes
 	ch <- serverArticlesTotal
 	ch <- serverArticlesSuccess
+	ch <- scrapeDuration
+	ch <- queueQueryDuration
+	ch <- serverStatsQueryDuration
 }
 
 func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
+	start := time.Now()
+	defer func() {
+		ch <- prometheus.MustNewConstMetric(scrapeDuration, prometheus.GaugeValue, time.Since(start).Seconds(), e.baseURL)
+	}()
+
 	queueStats := &models.QueueStats{}
 	serverStats := &models.ServerStats{}
 	g := new(errgroup.Group)
 	g.Go(func() error {
+		qStart := time.Now()
+		defer func() {
+			ch <- prometheus.MustNewConstMetric(
+				queueQueryDuration, prometheus.GaugeValue, time.Since(qStart).Seconds(), e.baseURL)
+		}()
 		var err error
 		queueStats, err = e.getQueueStats()
 		if err != nil {
@@ -230,6 +261,11 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 		return nil
 	})
 	g.Go(func() error {
+		sStart := time.Now()
+		defer func() {
+			ch <- prometheus.MustNewConstMetric(
+				serverStatsQueryDuration, prometheus.GaugeValue, time.Since(sStart).Seconds(), e.baseURL)
+		}()
 		var err error
 		serverStats, err = e.getServerStats()
 		if err != nil {

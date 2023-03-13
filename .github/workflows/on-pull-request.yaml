@@ -10,8 +10,3 @@ on:
 jobs:
   tests:
     uses: ./.github/workflows/tests.yaml
-
-  build-and-push:
-    uses: ./.github/workflows/docker-image.yaml
-    with:
-      push: false

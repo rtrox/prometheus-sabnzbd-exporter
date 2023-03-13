@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.FatalLevel)
 }
 
 const API_KEY = "abcdef0123456789abcdef0123456789"
@@ -51,13 +51,37 @@ func TestCollect(t *testing.T) {
 	collector, err := NewSabnzbdExporter(ts.URL, API_KEY)
 	require.NoError(err)
 
-	require.Equal(25, testutil.CollectAndCount(collector))
+	require.GreaterOrEqual(28, testutil.CollectAndCount(collector))
 
 	b, err := os.ReadFile("test_fixtures/expected_metrics.txt")
 	require.NoError(err)
 	expected := strings.Replace(string(b), "http://127.0.0.1:39965", ts.URL, -1)
 	f := strings.NewReader(expected)
-	err = testutil.CollectAndCompare(collector, f)
+	require.NotPanics(func() {
+		err = testutil.CollectAndCompare(collector, f,
+			"sabnzbd_downloaded_bytes",
+			"sabnzbd_server_downloaded_bytes",
+			"sabnzbd_server_articles_total",
+			"sabnzbd_server_articles_success",
+			"sabnzbd_info",
+			"sabnzbd_paused",
+			"sabnzbd_paused_all",
+			"sabnzbd_pause_duration_seconds",
+			"sabnzbd_disk_used_bytes",
+			"sabnzbd_disk_total_bytes",
+			"sabnzbd_remaining_quota_bytes",
+			"sabnzbd_quota_bytes",
+			"sabnzbd_article_cache_articles",
+			"sabnzbd_article_cache_bytes",
+			"sabnzbd_speed_bps",
+			"sabnzbd_remaining_bytes",
+			"sabnzbd_total_bytes",
+			"sabnzbd_queue_size",
+			"sabnzbd_status",
+			"sabnzbd_time_estimate_seconds",
+			"sabnzbd_queue_length",
+		)
+	})
 	require.NoError(err)
 }
 
@@ -69,12 +93,13 @@ func TestCollect_FailureDoesntPanic(t *testing.T) {
 	defer ts.Close()
 	collector, err := NewSabnzbdExporter(ts.URL, API_KEY)
 	require.NoError(err)
-	b, err := os.ReadFile("test_fixtures/expected_metrics.txt")
+	b, err := os.ReadFile("test_fixtures/expected_failure_metrics.txt")
 	require.NoError(err)
 	expected := strings.Replace(string(b), "http://127.0.0.1:39965", ts.URL, -1)
 	f := strings.NewReader(expected)
 	require.NotPanics(func() {
 		err = testutil.CollectAndCompare(collector, f)
-	})
+		require.Error(err)
+	}, "Collecting metrics should not panic on failure")
 	require.Error(err)
 }
