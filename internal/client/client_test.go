@@ -48,6 +48,7 @@ func TestGet_GoodStatusCodes(t *testing.T) {
 		http.StatusCreated,
 		http.StatusAccepted,
 	}
+
 	for _, parameter := range parameters {
 		t.Run(fmt.Sprintf("%d", parameter), func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +78,7 @@ func TestGet_BadStatusCodes(t *testing.T) {
 		http.StatusBadGateway,
 		http.StatusServiceUnavailable,
 	}
+
 	for _, parameter := range parameters {
 		t.Run(fmt.Sprintf("%d", parameter), func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

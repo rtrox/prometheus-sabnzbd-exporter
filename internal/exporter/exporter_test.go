@@ -30,10 +30,12 @@ func newTestServer(t *testing.T, fn func(http.ResponseWriter, *http.Request)) (*
 		switch r.URL.Query().Get("mode") {
 		case "queue":
 			w.WriteHeader(http.StatusOK)
-			w.Write(queue)
+			_, err := w.Write(queue)
+			require.NoError(t, err)
 		case "server_stats":
 			w.WriteHeader(http.StatusOK)
-			w.Write(serverStats)
+			_, err := w.Write(serverStats)
+			require.NoError(t, err)
 		}
 	})), nil
 }
@@ -46,6 +48,7 @@ func TestCollect(t *testing.T) {
 		require.Equal("json", r.URL.Query().Get("output"))
 	})
 	require.NoError(err)
+
 	defer ts.Close()
 
 	collector, err := NewSabnzbdExporter(ts.URL, API_KEY)
@@ -55,8 +58,10 @@ func TestCollect(t *testing.T) {
 
 	b, err := os.ReadFile("test_fixtures/expected_metrics.txt")
 	require.NoError(err)
+
 	expected := strings.Replace(string(b), "http://127.0.0.1:39965", ts.URL, -1)
 	f := strings.NewReader(expected)
+
 	require.NotPanics(func() {
 		err = testutil.CollectAndCompare(collector, f,
 			"sabnzbd_downloaded_bytes",
@@ -87,16 +92,21 @@ func TestCollect(t *testing.T) {
 
 func TestCollect_FailureDoesntPanic(t *testing.T) {
 	require := require.New(t)
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer ts.Close()
+
 	collector, err := NewSabnzbdExporter(ts.URL, API_KEY)
 	require.NoError(err)
+
 	b, err := os.ReadFile("test_fixtures/expected_failure_metrics.txt")
 	require.NoError(err)
+
 	expected := strings.Replace(string(b), "http://127.0.0.1:39965", ts.URL, -1)
 	f := strings.NewReader(expected)
+
 	require.NotPanics(func() {
 		err = testutil.CollectAndCompare(collector, f)
 		require.Error(err)

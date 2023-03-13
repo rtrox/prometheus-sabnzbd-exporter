@@ -163,8 +163,10 @@ func TestUpdateServerStatsCache(t *testing.T) {
 			},
 		},
 	})
+
 	server1 := cache.Servers["server1"]
 	server2 := cache.Servers["server2"]
+
 	require.Equal(1, server1.GetTotal())
 	require.Equal(2, server1.GetArticlesTried())
 	require.Equal(2, server1.GetArticlesSuccess())
@@ -183,8 +185,10 @@ func TestUpdateServerStatsCache(t *testing.T) {
 			},
 		},
 	})
+
 	server1 = cache.Servers["server1"]
 	server2 = cache.Servers["server2"]
+
 	require.Equal(2, cache.GetTotal())
 	require.Equal(3, server1.GetTotal())
 	require.Equal(6, server1.GetArticlesTried())
@@ -197,6 +201,7 @@ func TestUpdateServerStatsCache(t *testing.T) {
 func TestGetServerMap_ReturnsCopy(t *testing.T) {
 	// It's important to return a true copy to maintain thread safety
 	require := require.New(t)
+
 	cache := NewServersStatsCache()
 	cache.Update(models.ServerStats{
 		Total: 1,
@@ -209,11 +214,15 @@ func TestGetServerMap_ReturnsCopy(t *testing.T) {
 			},
 		},
 	})
+
 	serverMap := cache.GetServerMap()
+
 	for k, v := range serverMap {
 		require.Equal(cache.Servers[k], v)
 	}
+
 	require.NotSame(&cache.Servers, &serverMap)
+
 	cache.Update(models.ServerStats{
 		Total: 2,
 		Servers: map[string]models.ServerStat{
@@ -225,8 +234,10 @@ func TestGetServerMap_ReturnsCopy(t *testing.T) {
 			},
 		},
 	})
+
 	cServer := cache.Servers["server1"]
 	sServer := serverMap["server1"]
+
 	require.NotEqual(cServer.GetTotal(), sServer.GetTotal())
 	require.NotEqual(cServer.GetArticlesTried(), sServer.GetArticlesTried())
 	require.NotEqual(cServer.GetArticlesSuccess(), sServer.GetArticlesSuccess())

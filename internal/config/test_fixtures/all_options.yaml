@@ -1,0 +1,7 @@
+---
+base_url: http://localhost:8080
+api_key: abc123
+listen_port: 8081
+log_level: debug
+go_collector: true
+process_collector: true

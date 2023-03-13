@@ -159,6 +159,7 @@ func boolToFloat(b bool) float64 {
 	if b {
 		return 1
 	}
+
 	return 0
 }
 
@@ -173,6 +174,7 @@ func NewSabnzbdExporter(baseURL string, apiKey string) (*SabnzbdExporter, error)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to build client: %w", err)
 	}
+
 	return &SabnzbdExporter{
 		baseURL: baseURL,
 		cache:   NewServersStatsCache(),
@@ -185,15 +187,19 @@ func (s *SabnzbdExporter) getQueueStats() (*models.QueueStats, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get queue stats: %w", err)
 	}
+
 	var queueResponse models.QueueResponse
+
 	err = json.NewDecoder(resp.Body).Decode(&queueResponse)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to decode queue stats JSON: %w", err)
 	}
+
 	queueStats, err := models.NewQueueStatsFromResponse(queueResponse)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse queue Stats: %w", err)
 	}
+
 	return &queueStats, nil
 }
 
@@ -202,13 +208,15 @@ func (s *SabnzbdExporter) getServerStats() (*models.ServerStats, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get server stats: %w", err)
 	}
+
 	var statsResponse models.ServerStatsResponse
+
 	err = json.NewDecoder(resp.Body).Decode(&statsResponse)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to decode server stats JSON: %w", err)
 	}
-	serverStats := models.NewServerStatsFromResponse(statsResponse)
-	return serverStats, nil
+
+	return models.NewServerStatsFromResponse(statsResponse), nil
 }
 
 func (e *SabnzbdExporter) Describe(ch chan<- *prometheus.Desc) {
@@ -239,19 +247,22 @@ func (e *SabnzbdExporter) Describe(ch chan<- *prometheus.Desc) {
 
 func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 	start := time.Now()
-	defer func() {
+	defer func() { //nolint:wsl
 		ch <- prometheus.MustNewConstMetric(scrapeDuration, prometheus.GaugeValue, time.Since(start).Seconds(), e.baseURL)
 	}()
 
 	queueStats := &models.QueueStats{}
 	serverStats := &models.ServerStats{}
+
 	g := new(errgroup.Group)
+
 	g.Go(func() error {
 		qStart := time.Now()
-		defer func() {
+		defer func() { //nolint:wsl
 			ch <- prometheus.MustNewConstMetric(
 				queueQueryDuration, prometheus.GaugeValue, time.Since(qStart).Seconds(), e.baseURL)
 		}()
+
 		var err error
 		queueStats, err = e.getQueueStats()
 		if err != nil {
@@ -260,12 +271,14 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 		}
 		return nil
 	})
+
 	g.Go(func() error {
 		sStart := time.Now()
-		defer func() {
+		defer func() { //nolint:wsl
 			ch <- prometheus.MustNewConstMetric(
 				serverStatsQueryDuration, prometheus.GaugeValue, time.Since(sStart).Seconds(), e.baseURL)
 		}()
+
 		var err error
 		serverStats, err = e.getServerStats()
 		if err != nil {
@@ -273,15 +286,19 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 				Msg("Failed to get server stats")
 			return fmt.Errorf("failed to get server stats: %w", err)
 		}
+
 		e.cache.Update(*serverStats)
+
 		return nil
 	})
+
 	if err := g.Wait(); err != nil {
 		log.Err(err).Msg("Failed to get stats")
 		ch <- prometheus.NewInvalidMetric(
 			prometheus.NewDesc("sabnzbd_exporter_error", "Error getting stats", nil, prometheus.Labels{"target": e.baseURL}),
 			err,
 		)
+
 		return
 	}
 
@@ -342,6 +359,7 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(
 		timeEstimate, prometheus.GaugeValue, queueStats.TimeEstimate.Seconds(), e.baseURL,
 	)
+
 	for name, stats := range e.cache.GetServerMap() {
 		ch <- prometheus.MustNewConstMetric(
 			serverDownloadedBytes, prometheus.CounterValue, float64(stats.GetTotal()), e.baseURL, name,

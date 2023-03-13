@@ -63,6 +63,7 @@ func NewServerStatsFromResponse(response ServerStatsResponse) *ServerStats {
 		Total:   response.Total,
 		Servers: make(map[string]ServerStat),
 	}
+
 	for name, stats := range response.Servers {
 		d, tried := latestStat(stats.ArticlesTried)
 		_, success := latestStat(stats.ArticlesSuccess)
@@ -78,6 +79,7 @@ func NewServerStatsFromResponse(response ServerStatsResponse) *ServerStats {
 			DayParsed:       d,
 		}
 	}
+
 	return ret
 }
 
@@ -108,6 +110,7 @@ type QueueStats struct {
 
 func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 	var err error
+
 	queue := response.Queue
 	pauseDuration, err := parseDuration(queue.PauseInt, err)
 	downloadDirDiskspaceUsed, err := parseSize(queue.Diskspace1, err)
@@ -125,9 +128,11 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 	speedLimitAbs, err := parseSize(queue.SpeedlimitAbs, err)
 	haveWarnings, err := parseSize(queue.HaveWarnings, err)
 	timeLeft, err := parseDuration(queue.TimeLeft, err)
+
 	if err != nil {
 		return QueueStats{}, fmt.Errorf("Error parsing queue stats: %s", err)
 	}
+
 	return QueueStats{
 		Version:                    queue.Version,
 		Paused:                     queue.Paused,
@@ -160,8 +165,10 @@ func latestStat(m map[string]int) (string, int) {
 	for k := range m {
 		keys = append(keys, k)
 	}
+
 	sort.Strings(keys)
 	key := keys[len(keys)-1]
+
 	return key, m[key]
 }
 
@@ -170,10 +177,12 @@ func parseSize(sz string, prevErr error) (float64, error) {
 	if prevErr != nil {
 		return 0, prevErr
 	}
+
 	fields := strings.Fields(strings.TrimSpace(sz))
 	if len(fields) == 0 {
 		return 0, nil
 	}
+
 	if len(fields) > 2 {
 		return 0, fmt.Errorf("Invalid size: %s", sz)
 	}
@@ -210,29 +219,41 @@ func parseDuration(s string, prevErr error) (time.Duration, error) {
 	if prevErr != nil {
 		return 0, prevErr
 	}
+
 	if s == "" {
 		return 0, nil
 	}
+
 	fields := strings.Split(strings.TrimSpace(s), ":")
-	switch len(fields) {
-	case 1:
-		return time.ParseDuration(fmt.Sprintf("%ss", fields[0]))
-	case 2:
-		return time.ParseDuration(fmt.Sprintf("%sm%ss", fields[0], fields[1]))
-	case 3:
-		return time.ParseDuration(fmt.Sprintf("%sh%sm%ss", fields[0], fields[1], fields[2]))
-	case 4:
-		days, err := strconv.ParseInt(fields[0], 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		hours, err := strconv.ParseInt(fields[1], 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		totalHours := (days * 24) + hours
-		return time.ParseDuration(fmt.Sprintf("%dh%sm%ss", totalHours, fields[2], fields[3]))
-	default:
+	if len(fields) < 1 || len(fields) > 4 {
 		return 0, fmt.Errorf("Invalid duration: %s", s)
 	}
+
+	intFields := make([]int, len(fields))
+
+	for i, f := range fields {
+		var err error
+		// Reverse the order of the fields
+		intFields[len(intFields)-1-i], err = strconv.Atoi(f)
+		if err != nil {
+			return 0, fmt.Errorf("Invalid integer in duration: %s: %w", f, err)
+		}
+	}
+
+	ret := time.Duration(intFields[0]) * time.Second
+
+	fieldCount := len(intFields)
+	if fieldCount > 1 {
+		ret += time.Duration(intFields[1]) * time.Minute
+	}
+
+	if fieldCount > 2 {
+		ret += time.Duration(intFields[2]) * time.Hour
+	}
+
+	if fieldCount > 3 {
+		ret += time.Duration(intFields[3]) * 24 * time.Hour
+	}
+
+	return ret, nil
 }

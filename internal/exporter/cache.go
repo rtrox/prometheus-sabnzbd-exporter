@@ -23,6 +23,7 @@ type serverStatCache struct {
 
 func (s serverStatCache) Update(stat models.ServerStat) ServerStats {
 	s.total = stat.Total
+
 	if stat.DayParsed != s.todayKey {
 		s.articlesTriedHistorical += s.articlesTriedToday
 		s.articlesSuccessHistorical += s.articlesSuccessToday
@@ -30,8 +31,10 @@ func (s serverStatCache) Update(stat models.ServerStat) ServerStats {
 		s.articlesSuccessToday = 0
 		s.todayKey = stat.DayParsed
 	}
+
 	s.articlesTriedToday = stat.ArticlesTried
 	s.articlesSuccessToday = stat.ArticlesSuccess
+
 	return s
 }
 
@@ -62,29 +65,34 @@ func NewServersStatsCache() *ServersStatsCache {
 func (c *ServersStatsCache) Update(stats models.ServerStats) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
 	c.Total = stats.Total
+
 	for name, srv := range stats.Servers {
 		var toCache serverStatCache
 		if cached, ok := c.Servers[name]; ok {
 			toCache = cached
 		}
-		toCache = toCache.Update(srv).(serverStatCache)
-		c.Servers[name] = toCache
+
+		c.Servers[name] = toCache.Update(srv).(serverStatCache)
 	}
 }
 
 func (c *ServersStatsCache) GetTotal() int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
+
 	return c.Total
 }
 
 func (c *ServersStatsCache) GetServerMap() map[string]ServerStats {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
+
 	ret := make(map[string]ServerStats)
 	for k, v := range c.Servers {
 		ret[k] = v
 	}
+
 	return ret
 }

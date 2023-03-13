@@ -50,15 +50,18 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
+
 	err = cfg.Validate()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Invalid config")
 	}
+
 	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		// Sanity Check, should be unreachable due to validation.
 		log.Fatal().Err(err).Msg("Invalid log level")
 	}
+
 	zerolog.SetGlobalLevel(logLevel)
 
 	var srv http.Server
@@ -73,11 +76,14 @@ func main() {
 		log.Info().
 			Str("signal", sig.String()).
 			Msg("Stopping in response to signal")
+
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
+
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Fatal().Err(err).Msg("Failed to gracefully close http server")
 		}
+
 		close(idleConnsClosed)
 	}()
 
@@ -109,19 +115,25 @@ func main() {
 		),
 		ex,
 	)
+
 	if cfg.GoCollector {
 		reg.MustRegister(collectors.NewGoCollector())
 	}
+
 	if cfg.ProcessCollector {
 		reg.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	}
+
 	router := http.NewServeMux()
 	router.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	router.Handle("/healthz", newHealthCheckHandler())
+
 	srv.Addr = fmt.Sprintf(":%s", cfg.ListenPort)
 	srv.Handler = router
+
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("Failed to start HTTP Server")
 	}
+
 	<-idleConnsClosed
 }

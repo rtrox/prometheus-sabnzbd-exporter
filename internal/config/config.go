@@ -41,14 +41,22 @@ func LoadConfig(appName string, args []string) (*Config, error) {
 	f.String("listen_port", "8080", "port to listen on")
 	f.String("base_url", "", "base url of sabnzbd")
 	f.String("api_key", "", "api key of sabnzbd")
-	f.Parse(args)
 
-	k.Load(confmap.Provider(map[string]interface{}{
+	err := f.Parse(args)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing flags: %w", err)
+	}
+
+	err = k.Load(confmap.Provider(map[string]interface{}{
 		"log_level":         "info",
 		"listen_port":       "8080",
 		"go_collector":      false,
 		"process_collector": false,
 	}, "."), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error loading default config: %w", err)
+	}
+
 	cFiles, _ := f.GetStringSlice("config")
 	for _, c := range cFiles {
 		if err := k.Load(file.Provider(c), yaml.Parser()); err != nil {
@@ -56,21 +64,25 @@ func LoadConfig(appName string, args []string) (*Config, error) {
 		}
 	}
 
-	k.Load(env.Provider("SABNZBD_", ".", func(s string) string {
+	err = k.Load(env.Provider("SABNZBD_", ".", func(s string) string {
 		return strings.ToLower(strings.TrimPrefix(s, "SABNZBD_"))
 	}), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error loading env vars: %w", err)
+	}
 
 	if err := k.Load(posflag.Provider(f, ".", k), nil); err != nil {
 		return nil, fmt.Errorf("Error loading flags: %w", err)
 	}
 
 	var out Config
-	err := k.Unmarshal("", &out)
+
+	err = k.Unmarshal("", &out)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshalling config: %w", err)
 	}
-	return &out, nil
 
+	return &out, nil
 }
 
 func (c *Config) Validate() error {

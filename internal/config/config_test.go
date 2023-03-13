@@ -1,8 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -95,7 +93,9 @@ func TestValidate(t *testing.T) {
 			wantErr: true,
 		},
 	}
+
 	require := require.New(t)
+
 	for _, tt := range parameters {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.cfg.Validate()
@@ -146,7 +146,9 @@ func TestLoadConfig_Flags(t *testing.T) {
 			},
 		},
 	}
+
 	require := require.New(t)
+
 	for _, tt := range parameters {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := LoadConfig("testApp", tt.args)
@@ -197,7 +199,9 @@ func TestLoadConfig_Env(t *testing.T) {
 			},
 		},
 	}
+
 	require := require.New(t)
+
 	for _, tt := range parameters {
 		t.Run(tt.name, func(t *testing.T) {
 			for k, v := range tt.env {
@@ -210,22 +214,6 @@ func TestLoadConfig_Env(t *testing.T) {
 	}
 }
 
-var defaultsFile = `
----
-base_url: http://localhost:8080
-api_key: abc123
-`
-
-var allOptionsFile = `
----
-base_url: http://localhost:8080
-api_key: abc123
-listen_port: 8081
-log_level: debug
-go_collector: true
-process_collector: true
-`
-
 func TestLoadConfig_File(t *testing.T) {
 	parameters := []struct {
 		name     string
@@ -234,7 +222,7 @@ func TestLoadConfig_File(t *testing.T) {
 	}{
 		{
 			name: "defaults",
-			file: defaultsFile,
+			file: "test_fixtures/defaults.yaml",
 			expected: Config{
 				BaseURL:          "http://localhost:8080",
 				ApiKey:           "abc123",
@@ -246,7 +234,7 @@ func TestLoadConfig_File(t *testing.T) {
 		},
 		{
 			name: "all options",
-			file: allOptionsFile,
+			file: "test_fixtures/all_options.yaml",
 			expected: Config{
 				BaseURL:          "http://localhost:8080",
 				ApiKey:           "abc123",
@@ -257,16 +245,14 @@ func TestLoadConfig_File(t *testing.T) {
 			},
 		},
 	}
+
 	require := require.New(t)
+
 	for _, tt := range parameters {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := ioutil.TempFile("", "testConfig")
+			cfg, err := LoadConfig("testApp", []string{"--config", tt.file})
 			require.Nil(err)
-			defer os.Remove(f.Name())
-			_, err = f.WriteString(tt.file)
-			require.Nil(err)
-			cfg, err := LoadConfig("testApp", []string{"--config", f.Name()})
-			require.Nil(err)
+
 			require.EqualValues(tt.expected, *cfg)
 		})
 	}

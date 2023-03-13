@@ -14,5 +14,6 @@ func (t *SabnzbdTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	q.Add("apikey", t.apiKey)
 	q.Add("output", "json")
 	req.URL.RawQuery = q.Encode()
+
 	return t.inner.RoundTrip(req)
 }

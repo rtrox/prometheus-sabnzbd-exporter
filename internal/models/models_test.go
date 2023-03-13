@@ -125,6 +125,7 @@ func TestNewQueueStatsFromResponse(t *testing.T) {
 	require.Equal(3062.97, stats.Size)
 	require.Equal(2.0, stats.ItemsInQueue)
 	require.Equal(DOWNLOADING, stats.Status)
+
 	expected, _ := time.ParseDuration("2495h59m3s")
 	require.Equal(expected, stats.TimeEstimate)
 }
@@ -148,7 +149,9 @@ func TestNewQueueStatsFromResponse_ParsingSize(t *testing.T) {
 		{"10 P", 11258999068426240.0},
 		{"10.0 PB", 11258999068426240.0},
 	}
+
 	require := require.New(t)
+
 	for _, parameter := range parameters {
 		statsResponse := QueueResponse{
 			QueueResponseQueue{
@@ -172,7 +175,9 @@ func TestNewQueueStatsFromReponse_ParsingDuration(t *testing.T) {
 		{"13:12:11", time.Duration(13)*time.Hour + time.Duration(12)*time.Minute + time.Duration(11)*time.Second},
 		{"14:13:12:11", time.Duration(349)*time.Hour + time.Duration(12)*time.Minute + time.Duration(11)*time.Second},
 	}
+
 	require := require.New(t)
+
 	for _, parameter := range parameters {
 		statsResponse := QueueResponse{
 			QueueResponseQueue{
