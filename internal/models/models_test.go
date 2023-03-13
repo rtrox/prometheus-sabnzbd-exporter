@@ -37,7 +37,7 @@ func TestNewServerStatsFromResponse(t *testing.T) {
 	statsResponse := ServerStatsResponse{
 		Total: 123456789,
 		Servers: map[string]ServerStatResponse{
-			"server1": ServerStatResponse{
+			"server1": {
 				Total: 234567890,
 				ArticlesTried: map[string]int{
 					"2020-01-01": 1,
@@ -48,7 +48,7 @@ func TestNewServerStatsFromResponse(t *testing.T) {
 					"2020-01-02": 4,
 				},
 			},
-			"server2": ServerStatResponse{
+			"server2": {
 				Total: 345678901,
 				ArticlesTried: map[string]int{
 					"2020-01-02": 6,
