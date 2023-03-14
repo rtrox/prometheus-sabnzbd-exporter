@@ -131,7 +131,7 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 	quota, err := parseSize(queue.Quota, err)
 	speedLimit, err := parseSize(queue.Speedlimit, err)
 	speedLimitAbs, err := parseSize(queue.SpeedlimitAbs, err)
-	haveWarnings, err := parseSize(queue.HaveWarnings, err)
+	haveWarnings, err := parseFloat(queue.HaveWarnings, err)
 	timeLeft, err := parseDuration(queue.TimeLeft, err)
 
 	if err != nil {

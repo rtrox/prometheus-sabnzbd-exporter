@@ -9,6 +9,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,7 +55,7 @@ func TestCollect(t *testing.T) {
 	collector, err := NewSabnzbdExporter(ts.URL, API_KEY)
 	require.NoError(err)
 
-	require.GreaterOrEqual(28, testutil.CollectAndCount(collector))
+	assert.GreaterOrEqual(t, 29, testutil.CollectAndCount(collector))
 
 	b, err := os.ReadFile("test_fixtures/expected_metrics.txt")
 	require.NoError(err)
@@ -85,6 +86,7 @@ func TestCollect(t *testing.T) {
 			"sabnzbd_status",
 			"sabnzbd_time_estimate_seconds",
 			"sabnzbd_queue_length",
+			"sabnzbd_warnings",
 		)
 	})
 	require.NoError(err)

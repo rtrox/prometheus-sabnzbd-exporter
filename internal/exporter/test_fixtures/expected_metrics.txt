@@ -63,3 +63,6 @@ sabnzbd_time_estimate_seconds{target="http://127.0.0.1:39965"} 8.985543e+06
 # HELP sabnzbd_total_bytes Total Bytes in queue to Download by the SabnzbD instance
 # TYPE sabnzbd_total_bytes gauge
 sabnzbd_total_bytes{target="http://127.0.0.1:39965"} 3.21175683072e+09
+# HELP sabnzbd_warnings Total Warnings in the SabnzbD instance's queue
+# TYPE sabnzbd_warnings gauge
+sabnzbd_warnings{target="http://127.0.0.1:39965"} 0

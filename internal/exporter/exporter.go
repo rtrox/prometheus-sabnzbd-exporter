@@ -135,6 +135,12 @@ var (
 		[]string{"target"},
 		nil,
 	)
+	warnings = prometheus.NewDesc(
+		prometheus.BuildFQName(METRIC_PREFIX, "", "warnings"),
+		"Total Warnings in the SabnzbD instance's queue",
+		[]string{"target"},
+		nil,
+	)
 	scrapeDuration = prometheus.NewDesc(
 		prometheus.BuildFQName(METRIC_PREFIX, "", "scrape_duration_seconds"),
 		"Duration of the SabnzbD scrape",
@@ -240,6 +246,7 @@ func (e *SabnzbdExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- serverDownloadedBytes
 	ch <- serverArticlesTotal
 	ch <- serverArticlesSuccess
+	ch <- warnings
 	ch <- scrapeDuration
 	ch <- queueQueryDuration
 	ch <- serverStatsQueryDuration
@@ -358,6 +365,9 @@ func (e *SabnzbdExporter) Collect(ch chan<- prometheus.Metric) {
 	)
 	ch <- prometheus.MustNewConstMetric(
 		timeEstimate, prometheus.GaugeValue, queueStats.TimeEstimate.Seconds(), e.baseURL,
+	)
+	ch <- prometheus.MustNewConstMetric(
+		warnings, prometheus.GaugeValue, queueStats.HaveWarnings, e.baseURL,
 	)
 
 	for name, stats := range e.cache.GetServerMap() {
