@@ -11,6 +11,11 @@ import (
 type Status int
 
 const (
+	KB = 1024
+	MB = 1024 * KB
+)
+
+const (
 	UNKNOWN Status = iota
 	IDLE
 	PAUSED
@@ -113,16 +118,16 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 
 	queue := response.Queue
 	pauseDuration, err := parseDuration(queue.PauseInt, err)
-	downloadDirDiskspaceUsed, err := parseSize(queue.Diskspace1, err)
-	downloadDirDiskspaceTotal, err := parseSize(queue.DiskspaceTotal1, err)
-	completedDirDiskspaceUsed, err := parseSize(queue.Diskspace2, err)
-	completedDirDiskspaceTotal, err := parseSize(queue.DiskspaceTotal2, err)
+	downloadDirDiskspaceUsed, err := parseFloat(queue.Diskspace1, err)
+	downloadDirDiskspaceTotal, err := parseFloat(queue.DiskspaceTotal1, err)
+	completedDirDiskspaceUsed, err := parseFloat(queue.Diskspace2, err)
+	completedDirDiskspaceTotal, err := parseFloat(queue.DiskspaceTotal2, err)
 	leftQuota, err := parseSize(queue.LeftQuota, err)
 	cacheArt, err := parseSize(queue.CacheArt, err)
 	cacheSize, err := parseSize(queue.CacheSize, err)
-	speed, err := parseSize(queue.KBPerSec, err)
-	sizeLeft, err := parseSize(queue.MBLeft, err)
-	size, err := parseSize(queue.MB, err)
+	speed, err := parseFloat(queue.KBPerSec, err)
+	remainingSize, err := parseFloat(queue.MBLeft, err)
+	size, err := parseFloat(queue.MB, err)
 	quota, err := parseSize(queue.Quota, err)
 	speedLimit, err := parseSize(queue.Speedlimit, err)
 	speedLimitAbs, err := parseSize(queue.SpeedlimitAbs, err)
@@ -138,10 +143,10 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 		Paused:                     queue.Paused,
 		PausedAll:                  queue.PausedAll,
 		PauseDuration:              pauseDuration,
-		DownloadDirDiskspaceUsed:   downloadDirDiskspaceUsed,
-		DownloadDirDiskspaceTotal:  downloadDirDiskspaceTotal,
-		CompletedDirDiskspaceUsed:  completedDirDiskspaceUsed,
-		CompletedDirDiskspaceTotal: completedDirDiskspaceTotal,
+		DownloadDirDiskspaceUsed:   downloadDirDiskspaceUsed * MB,
+		DownloadDirDiskspaceTotal:  downloadDirDiskspaceTotal * MB,
+		CompletedDirDiskspaceUsed:  completedDirDiskspaceUsed * MB,
+		CompletedDirDiskspaceTotal: completedDirDiskspaceTotal * MB,
 		SpeedLimit:                 speedLimit,
 		SpeedLimitAbs:              speedLimitAbs,
 		HaveWarnings:               haveWarnings,
@@ -150,9 +155,9 @@ func NewQueueStatsFromResponse(response QueueResponse) (QueueStats, error) {
 		RemainingQuota:             leftQuota,
 		CacheArt:                   cacheArt,
 		CacheSize:                  cacheSize,
-		Speed:                      speed,
-		RemainingSize:              sizeLeft,
-		Size:                       size,
+		Speed:                      speed * KB,
+		RemainingSize:              remainingSize * MB,
+		Size:                       size * MB,
 		ItemsInQueue:               float64(queue.NoofSlotsTotal),
 		Status:                     StatusFromString(queue.Status),
 		TimeEstimate:               timeLeft,
@@ -170,6 +175,24 @@ func latestStat(m map[string]int) (string, int) {
 	key := keys[len(keys)-1]
 
 	return key, m[key]
+}
+
+// parseFloat is a monad version of strconv.ParseFloat
+func parseFloat(f string, prevErr error) (float64, error) {
+	if prevErr != nil {
+		return 0, prevErr
+	}
+
+	if f == "" {
+		return 0, nil
+	}
+
+	ret, err := strconv.ParseFloat(f, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return ret, nil
 }
 
 // parseSize is a monad which parses a size string in the format of "123.45 KB" or "123.45"

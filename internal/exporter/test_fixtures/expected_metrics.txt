@@ -6,12 +6,12 @@ sabnzbd_article_cache_articles{target="http://127.0.0.1:39965"} 0
 sabnzbd_article_cache_bytes{target="http://127.0.0.1:39965"} 0
 # HELP sabnzbd_disk_total_bytes Total Bytes on the SabnzbD instance's disk
 # TYPE sabnzbd_disk_total_bytes gauge
-sabnzbd_disk_total_bytes{folder="complete",target="http://127.0.0.1:39965"} 42888
-sabnzbd_disk_total_bytes{folder="download",target="http://127.0.0.1:39965"} 42888
+sabnzbd_disk_total_bytes{folder="complete",target="http://127.0.0.1:39965"} 4.4972376064e+10
+sabnzbd_disk_total_bytes{folder="download",target="http://127.0.0.1:39965"} 4.4971327488e+10
 # HELP sabnzbd_disk_used_bytes Used Bytes Used on the SabnzbD instance's disk
 # TYPE sabnzbd_disk_used_bytes gauge
-sabnzbd_disk_used_bytes{folder="complete",target="http://127.0.0.1:39965"} 34773.6
-sabnzbd_disk_used_bytes{folder="download",target="http://127.0.0.1:39965"} 34773.6
+sabnzbd_disk_used_bytes{folder="complete",target="http://127.0.0.1:39965"} 3.64061392896e+10
+sabnzbd_disk_used_bytes{folder="download",target="http://127.0.0.1:39965"} 3.64627623936e+10
 # HELP sabnzbd_downloaded_bytes Total Bytes Downloaded by SABnzbd
 # TYPE sabnzbd_downloaded_bytes counter
 sabnzbd_downloaded_bytes{target="http://127.0.0.1:39965"} 5.869995742788e+12
@@ -35,10 +35,10 @@ sabnzbd_queue_length{target="http://127.0.0.1:39965"} 2
 sabnzbd_quota_bytes{target="http://127.0.0.1:39965"} 1.07911053312e+12
 # HELP sabnzbd_remaining_bytes Total Bytes Remaining to Download by the SabnzbD instance
 # TYPE sabnzbd_remaining_bytes gauge
-sabnzbd_remaining_bytes{target="http://127.0.0.1:39965"} 3061.97
+sabnzbd_remaining_bytes{target="http://127.0.0.1:39965"} 3.21070825472e+09
 # HELP sabnzbd_remaining_quota_bytes Total Bytes Left in the SabnzbD instance's quota
 # TYPE sabnzbd_remaining_quota_bytes gauge
-sabnzbd_remaining_quota_bytes{target="http://127.0.0.1:39965"} 1.07911053312e+12
+sabnzbd_remaining_quota_bytes{target="http://127.0.0.1:39965"} 1.073741824e+12
 # HELP sabnzbd_server_articles_success Total Articles Successfully downloaded from UseNet Server
 # TYPE sabnzbd_server_articles_success counter
 sabnzbd_server_articles_success{server="server1.example.tld",target="http://127.0.0.1:39965"} 12618
@@ -53,7 +53,7 @@ sabnzbd_server_downloaded_bytes{server="server1.example.tld",target="http://127.
 sabnzbd_server_downloaded_bytes{server="server2.example.tld",target="http://127.0.0.1:39965"} 1.10895796e+08
 # HELP sabnzbd_speed_bps Total Bytes Downloaded per Second by the SabnzbD instance
 # TYPE sabnzbd_speed_bps gauge
-sabnzbd_speed_bps{target="http://127.0.0.1:39965"} 0.35
+sabnzbd_speed_bps{target="http://127.0.0.1:39965"} 358.4
 # HELP sabnzbd_status Status of the SabnzbD instance's queue (0=Unknown, 1=Idle, 2=Paused, 3=Downloading)
 # TYPE sabnzbd_status gauge
 sabnzbd_status{target="http://127.0.0.1:39965"} 3
@@ -62,4 +62,4 @@ sabnzbd_status{target="http://127.0.0.1:39965"} 3
 sabnzbd_time_estimate_seconds{target="http://127.0.0.1:39965"} 8.985543e+06
 # HELP sabnzbd_total_bytes Total Bytes in queue to Download by the SabnzbD instance
 # TYPE sabnzbd_total_bytes gauge
-sabnzbd_total_bytes{target="http://127.0.0.1:39965"} 3061.97
+sabnzbd_total_bytes{target="http://127.0.0.1:39965"} 3.21175683072e+09

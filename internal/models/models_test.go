@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,7 +34,7 @@ func TestStatusToFloat(t *testing.T) {
 }
 
 func TestNewServerStatsFromResponse(t *testing.T) {
-	require := require.New(t)
+	assert := assert.New(t)
 	statsResponse := ServerStatsResponse{
 		Total: 123456789,
 		Servers: map[string]ServerStatResponse{
@@ -62,20 +63,20 @@ func TestNewServerStatsFromResponse(t *testing.T) {
 		},
 	}
 	stats := NewServerStatsFromResponse(statsResponse)
-	require.Equal(123456789, stats.Total)
-	require.Equal(2, len(stats.Servers))
-	require.Equal(234567890, stats.Servers["server1"].Total)
-	require.Equal(2, stats.Servers["server1"].ArticlesTried)
-	require.Equal(4, stats.Servers["server1"].ArticlesSuccess)
-	require.Equal("2020-01-02", stats.Servers["server1"].DayParsed)
-	require.Equal(345678901, stats.Servers["server2"].Total)
-	require.Equal(6, stats.Servers["server2"].ArticlesTried)
-	require.Equal(8, stats.Servers["server2"].ArticlesSuccess)
-	require.Equal("2020-01-02", stats.Servers["server2"].DayParsed)
+	assert.Equal(123456789, stats.Total)
+	assert.Equal(2, len(stats.Servers))
+	assert.Equal(234567890, stats.Servers["server1"].Total)
+	assert.Equal(2, stats.Servers["server1"].ArticlesTried)
+	assert.Equal(4, stats.Servers["server1"].ArticlesSuccess)
+	assert.Equal("2020-01-02", stats.Servers["server1"].DayParsed)
+	assert.Equal(345678901, stats.Servers["server2"].Total)
+	assert.Equal(6, stats.Servers["server2"].ArticlesTried)
+	assert.Equal(8, stats.Servers["server2"].ArticlesSuccess)
+	assert.Equal("2020-01-02", stats.Servers["server2"].DayParsed)
 }
 
 func TestNewQueueStatsFromResponse(t *testing.T) {
-	require := require.New(t)
+	assert := assert.New(t)
 	statsResponse := QueueResponse{
 		QueueResponseQueue{
 			Version:         "3.7.2",
@@ -103,31 +104,31 @@ func TestNewQueueStatsFromResponse(t *testing.T) {
 		},
 	}
 	stats, err := NewQueueStatsFromResponse(statsResponse)
-	require.NoError(err)
-	require.Equal("3.7.2", stats.Version)
-	require.Equal(false, stats.Paused)
-	require.Equal(time.Duration(0), stats.PauseDuration)
-	require.Equal(false, stats.PausedAll)
-	require.Equal(34773.60, stats.DownloadDirDiskspaceUsed)
-	require.Equal(34719.60, stats.CompletedDirDiskspaceUsed)
-	require.Equal(42888.0, stats.DownloadDirDiskspaceTotal)
-	require.Equal(42889.0, stats.CompletedDirDiskspaceTotal)
-	require.Equal(100.0, stats.SpeedLimit)
-	require.Equal(1048576000.0, stats.SpeedLimitAbs)
-	require.Equal(0.0, stats.HaveWarnings)
-	require.Equal(1079110533120.0, stats.Quota)
-	require.Equal(true, stats.HaveQuota)
-	require.Equal(1079110533120.0, stats.RemainingQuota)
-	require.Equal(0.0, stats.CacheArt)
-	require.Equal(0.0, stats.CacheSize)
-	require.Equal(0.35, stats.Speed)
-	require.Equal(3061.97, stats.RemainingSize)
-	require.Equal(3062.97, stats.Size)
-	require.Equal(2.0, stats.ItemsInQueue)
-	require.Equal(DOWNLOADING, stats.Status)
+	require.NoError(t, err)
+	assert.Equal("3.7.2", stats.Version)
+	assert.Equal(false, stats.Paused)
+	assert.Equal(time.Duration(0), stats.PauseDuration)
+	assert.Equal(false, stats.PausedAll)
+	assert.Equal(36462762393.6, stats.DownloadDirDiskspaceUsed)
+	assert.Equal(36406139289.6, stats.CompletedDirDiskspaceUsed)
+	assert.Equal(44971327488.0, stats.DownloadDirDiskspaceTotal)
+	assert.Equal(44972376064.0, stats.CompletedDirDiskspaceTotal)
+	assert.Equal(100.0, stats.SpeedLimit)
+	assert.Equal(1048576000.0, stats.SpeedLimitAbs)
+	assert.Equal(0.0, stats.HaveWarnings)
+	assert.Equal(1079110533120.0, stats.Quota)
+	assert.Equal(true, stats.HaveQuota)
+	assert.Equal(1079110533120.0, stats.RemainingQuota)
+	assert.Equal(0.0, stats.CacheArt)
+	assert.Equal(0.0, stats.CacheSize)
+	assert.Equal(358.4, stats.Speed)
+	assert.Equal(3210708254.72, stats.RemainingSize)
+	assert.Equal(3211756830.72, stats.Size)
+	assert.Equal(2.0, stats.ItemsInQueue)
+	assert.Equal(DOWNLOADING, stats.Status)
 
 	expected, _ := time.ParseDuration("2495h59m3s")
-	require.Equal(expected, stats.TimeEstimate)
+	assert.Equal(expected, stats.TimeEstimate)
 }
 
 func TestNewQueueStatsFromResponse_ParsingSize(t *testing.T) {
