@@ -2,6 +2,9 @@
 
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/rtrox/prometheus-sabnzbd-exporter) ![GitHub](https://img.shields.io/github/license/rtrox/prometheus-sabnzbd-exporter) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/rtrox/prometheus-sabnzbd-exporter) ![GitHub branch checks state](https://img.shields.io/github/checks-status/rtrox/prometheus-sabnzbd-exporter/main?label=tests) ![Coveralls branch](https://img.shields.io/coverallsCoverage/github/rtrox/prometheus-sabnzbd-exporter?branch=master)
 
+
+## Deprecated! This project in it's entirety was pulled into [Exportarr](https://github.com/onedr0p/exportarr), where it will continue to see active development with more maintainers.
+
 Prometheus SabnzbD Exporter will, when polled by prometheus, collect statistics from SabnzbD API Endpoints.
 
 ![Grafana Dashboard](.github/images/dashboard.png)
